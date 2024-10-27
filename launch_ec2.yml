@@ -1,0 +1,21 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+
+Description: "A simple EC2 instance with parameters"
+
+Parameters:
+  InstanceType:
+    Type: String
+    Default: t2.micro
+    Description: EC2 instance type
+  KeyName:
+    Type: String
+    Description: Name of an existing EC2 Key Pair
+
+Resources:
+  MyEC2Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: ami-050cd642fd83388e4
+      InstanceType: !Ref InstanceType
+      KeyName: !Ref KeyName
