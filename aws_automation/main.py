@@ -11,7 +11,7 @@ from botocore.exceptions import ClientError
 class AWSClient:
     """AWSClient class."""
 
-    def __init__(
+    def __init__(  # pylint: disable=R0913, R0917
         self,
         profile_name: t.Optional[str] = "default",
         template_file_name: str = "launch_ec2.yml",
@@ -19,7 +19,7 @@ class AWSClient:
         source_file_path: str = __file__,
         stack_name: str = "my-cloudformation-stack",
     ) -> None:
-        """Initialize AWSClient
+        """Initialize AWSClient.
 
         Args:
             profile_name (t.Optional[str], optional): Name of the profile.
@@ -47,22 +47,21 @@ class AWSClient:
         self,
         target_file_name: str,
     ) -> str:
-        """Find the path to the file
+        """Find the path to the file.
 
         Args:
             target_file_name (str): The name of the target file.
 
         Raises:
-            ValueError: Source file name is not specified
-            ValueError: File `target_file_name` exists in multiple directories
-            ValueError: File `target_file_name` not found
+            ValueError: Source file name is not specified.
+            ValueError: File `target_file_name` exists in multiple directories.
+            ValueError: File `target_file_name` not found.
 
         Returns:
-            str: The path to the file
+            str: The path to the file.
         """
         source_file_path: Path = Path(self.source_file_path)
 
-        # Check in the same directory, parent directory, and grandparent directory
         for directory in [
             source_file_path.parent,
             source_file_path.parent.parent,
@@ -95,10 +94,11 @@ class AWSClient:
     def open_session(
         self, profile_name: t.Optional[str] = "default"
     ) -> boto3.session.Session:
-        """Open a boto3 session to AWS console
+        """Open a boto3 session to AWS console.
 
         Args:
-            profile_name (str, optional): Name of the profile. Defaults to "default".
+            profile_name (str, optional): Name of the profile.
+                Defaults to "default".
 
         Returns:
             boto3.session.Session: _boto3.session.Session_
@@ -110,13 +110,13 @@ class AWSClient:
         return console
 
     def create_key_pair(self, key_name: str) -> None:
-        """Generate a key pair in AWS
+        """Generate a key pair in AWS.
 
         Args:
-            key_name (str): Name of the key pair
+            key_name (str): Name of the key pair.
 
         Exceptions:
-            ClientError: Key pair already exists
+            ClientError: Key pair already exists.
 
         Returns:
             None
@@ -128,42 +128,52 @@ class AWSClient:
             private_key: str = key_pair["KeyMaterial"]
 
             # Write the private key to a file
-            with open(file=self.ssh_key_file_name, mode="w", encoding="utf-8") as f:
+            with open(
+                file=self.ssh_key_file_name,
+                mode="w",
+                encoding="utf-8",
+            ) as f:
                 f.write(private_key)
 
         except ClientError:
             print(f"Key pair '{key_name}' already exists.")
 
     def wait_for_completion(self, status: str) -> None:
-        """Wait for the stack to complete processing
+        """Wait for the stack to complete processing.
 
         Args:
-            status (str): The status of the stack
+            status (str): The status of the stack.
 
         Returns:
             None
         """
-        stack_description = self.cf.describe_stack_events(StackName=self.stack_name)
-        all_events: t.List[t.Dict[str, t.Any]] = stack_description.get("StackEvents")
+        stack_description = self.cf.describe_stack_events(
+            StackName=self.stack_name,
+        )
+        all_events: t.List[t.Dict[str, t.Any]] = stack_description.get(
+            "StackEvents",
+        )
         statuses = [event.get("ResourceStatus") for event in all_events]
         while status not in statuses:
             sleep(5)
-            stack_description = self.cf.describe_stack_events(StackName=self.stack_name)
-            all_events: t.List[t.Dict[str, t.Any]] = stack_description.get(
+            stack_description = self.cf.describe_stack_events(
+                StackName=self.stack_name,
+            )
+            all_events_again: t.List[t.Dict[str, t.Any]] = stack_description.get(
                 "StackEvents"
             )
-            statuses = [event.get("ResourceStatus") for event in all_events]
+            statuses = [event.get("ResourceStatus") for event in all_events_again]
             print("...")
         print(f"Stack {self.stack_name} is {status}.")
 
     def create_stack_with_parameters(self) -> None:
-        """Create a stack with parameters
+        """Create a stack with parameters.
 
         Returns:
             None
 
         Exceptions:
-            ClientError: Stack already exists
+            ClientError: Stack already exists.
         """
         parameters: t.List[t.Dict[str, str]] = [
             {
@@ -188,10 +198,10 @@ class AWSClient:
             print(f"Stack '{self.stack_name}' already exists.")
 
     def delete_stack(self) -> None:
-        """Delete the stack
+        """Delete the stack.
 
         Exceptions:
-            ClientError: Stack does not exist
+            ClientError: Stack does not exist.
 
         Returns:
             None
@@ -204,11 +214,11 @@ class AWSClient:
 
 
 if __name__ == "__main__":
-    console = AWSClient(
+    aws_console = AWSClient(
         profile_name="default",
         template_file_name="launch_ec2.yml",
-        source_file_path=Path(__file__),
+        source_file_path=__file__,
         ssh_key_file_name="key_pair.pem",
     )
-    # console.create_stack_with_parameters()
-    console.delete_stack()
+    # aws_console.create_stack_with_parameters()
+    aws_console.delete_stack()
